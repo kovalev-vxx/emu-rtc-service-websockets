@@ -35,8 +35,8 @@ const getRooms = () => {
     return Array.from(io.sockets.adapter.rooms.keys()).filter(e=>e.startsWith(SERVER_ROOM_PREFIX))
 }
 
-const getRoomPlayers = (roomId: string): string[] => {
-    return Array.from(io.sockets.adapter.rooms.get(roomId) || [])
+const getRoomPlayers = (roomId: string): User[] => {
+    return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(e=> users.get(e)).filter(e=> e !== undefined) as User[]
 }
 
 const offers: Map<string, string[]> = new Map<string, string[]>()
@@ -102,6 +102,9 @@ io.on("connection", (socket) => {
     socket.emit("me", me({socket}))
     socket.emit("rooms", getRooms())
 
+    socket.on("rooms", () => {
+        socket.emit("rooms", getRooms())
+    })
 
     socket.on("create_room", () => {
         const newRoomId = SERVER_ROOM_PREFIX + String(crypto.randomUUID())
